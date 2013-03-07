@@ -38,9 +38,11 @@
     var click_carousel = false;
     var current_stop = -1;
     var current_map_layer;
+    var map_options = {interaction: false, infowindows: false};
 
     var pre_i = 1; //skips the first layer at 0 so not to double load a map
     function preload_maps(){
+      console.log(pre_i)
       if (carousel[pre_i].type == 'cartodb') {
         if (carousel[pre_i].layer) {
           pre_i++;
@@ -49,11 +51,10 @@
             return true;
           }
         } else {
-          var options = {};
           if (carousel[pre_i].sql != null){
-            options.query = carousel[pre_i].sql;
+            map_options.query = carousel[pre_i].sql;
           }
-          cartodb.createLayer(map, carousel[pre_i].cartodb_url, options, function(layer) {
+          cartodb.createLayer(map, carousel[pre_i].cartodb_url, map_options, function(layer) {
             carousel[pre_i].layer = layer;
             pre_i++;
             if (pre_i < carousel_options.max_stops) {
@@ -61,6 +62,24 @@
               return true;
             }
           });
+        }
+      } else if (carousel[pre_i].type == 'image') {
+        if(carousel[pre_i].img){
+          pre_i++;
+          if (pre_i < carousel_options.max_stops) {
+            setTimeout(preload_maps, 0);
+            return true;
+          }
+        } else {
+          carousel[pre_i].img = new Image();
+          carousel[pre_i].img.src = carousel[pre_i].identifier;
+          carousel[pre_i].img.onload = function(){
+            pre_i++;
+            if (pre_i < carousel_options.max_stops) {
+              setTimeout(preload_maps, 0);
+              return true;
+            }
+          }
         }
       } else {
         pre_i++;
@@ -95,11 +114,10 @@
           current_map_layer = carousel[current_stop].layer;
           map.addLayer(current_map_layer);
         } else {
-          var options = {};
           if (carousel[current_stop].sql != null){
-            options.query = carousel[current_stop].sql;
+            map_options.query = carousel[current_stop].sql;
           }
-          cartodb.createLayer(map, carousel[current_stop].cartodb_url, options, function(layer) {
+          cartodb.createLayer(map, carousel[current_stop].cartodb_url, map_options, function(layer) {
             carousel[current_stop].layer = layer;
             current_map_layer = carousel[current_stop].layer;
             map.addLayer(current_map_layer);

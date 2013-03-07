@@ -55,7 +55,7 @@
         padding: 10px 60px 0 260px;
         height: 190px;
         color: #DDC3C7;
-        background-image: url('/img/background.png');
+        background-image: url('img/background.png');
         background-repeat: no-repeat;
       }
       .page-header {

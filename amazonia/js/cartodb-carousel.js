@@ -23,14 +23,6 @@
         attribution: 'MapBox'
       }).addTo(map);
 
-      // var layerUrl = 'http://biota.cartodb.com/api/v1/viz/22972/viz.json';
-      // cartodb.createLayer(map, layerUrl, {interactivity: null, infowindows: false}, function(layer,ee) {
-      //   map.addLayer(layer);
-      //   console.log(layer);
-      //   console.log(ee);
-      // });
-
-
     var carousel = new Array();
     var layers = new Array();
     var sql = new cartodb.SQL({ user: carousel_options.domain});
@@ -38,11 +30,10 @@
     var click_carousel = false;
     var current_stop = -1;
     var current_map_layer;
-    var map_options = {interaction: false, infowindows: false};
+    var map_options = {infowindow: false};
 
     var pre_i = 1; //skips the first layer at 0 so not to double load a map
     function preload_maps(){
-      console.log(pre_i)
       if (carousel[pre_i].type == 'cartodb') {
         if (carousel[pre_i].layer) {
           pre_i++;
@@ -51,10 +42,8 @@
             return true;
           }
         } else {
-          if (carousel[pre_i].sql != null){
-            map_options.query = carousel[pre_i].sql;
-          }
-          cartodb.createLayer(map, carousel[pre_i].cartodb_url, map_options, function(layer) {
+          for (var attrname in map_options) { carousel[pre_i].options[attrname] = map_options[attrname]; }
+          cartodb.createLayer(map, carousel[pre_i].cartodb_url, carousel[pre_i].options, function(layer) {
             carousel[pre_i].layer = layer;
             pre_i++;
             if (pre_i < carousel_options.max_stops) {
@@ -113,11 +102,9 @@
         if (carousel[current_stop].layer) {
           current_map_layer = carousel[current_stop].layer;
           map.addLayer(current_map_layer);
+          current_map_layer.setInteraction(false);
         } else {
-          if (carousel[current_stop].sql != null){
-            map_options.query = carousel[current_stop].sql;
-          }
-          cartodb.createLayer(map, carousel[current_stop].cartodb_url, map_options, function(layer) {
+          cartodb.createLayer(map, carousel[current_stop].cartodb_url, carousel[current_stop].options, function(layer) {
             carousel[current_stop].layer = layer;
             current_map_layer = carousel[current_stop].layer;
             map.addLayer(current_map_layer);
@@ -183,6 +170,10 @@
         for (var i=0; i<data.rows.length; i++){
           if (data.rows[i].type == 'cartodb') {
             data.rows[i].cartodb_url = 'http://'+carousel_options.domain+'.cartodb.com/api/v1/viz/'+data.rows[i].identifier+'/viz.json'
+            data.rows[i].options = {};
+            if (data.rows[i].sql != null){
+              data.rows[i].options.query = data.rows[i].sql;
+            }
           } 
         }
         carousel = data.rows;

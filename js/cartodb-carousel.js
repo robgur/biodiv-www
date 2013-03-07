@@ -38,6 +38,38 @@
     var click_carousel = false;
     var current_stop = -1;
     var current_map_layer;
+
+    var pre_i = 1; //skips the first layer at 0 so not to double load a map
+    function preload_maps(){
+      if (carousel[pre_i].type == 'cartodb') {
+        if (carousel[pre_i].layer) {
+          pre_i++;
+          if (pre_i < carousel_options.max_stops) {
+            setTimeout(preload_maps, 0);
+            return true;
+          }
+        } else {
+          var options = {};
+          if (carousel[pre_i].sql != null){
+            options.query = carousel[pre_i].sql;
+          }
+          cartodb.createLayer(map, carousel[pre_i].cartodb_url, options, function(layer) {
+            carousel[pre_i].layer = layer;
+            pre_i++;
+            if (pre_i < carousel_options.max_stops) {
+              setTimeout(preload_maps, 0);
+              return true;
+            }
+          });
+        }
+      } else {
+        pre_i++;
+        if (pre_i < carousel_options.max_stops) {
+          setTimeout(preload_maps, 0);
+          return true;
+        }
+      }
+    }
     function spin(){
       // If the carousel wasn't manually forwarded, and isn't
       // running, then don't spin again
@@ -93,20 +125,6 @@
           }
         }
 
-        // var h = ;
-        // console.log(h)
-        // if (h < ){
-        //   console.log('h')
-        //   $("#hero-image img").css({'padding-top': '50px'});
-        // }
-        // $("#hero-image").css({
-        //   'background': 'url('+carousel[current_stop].identifier+') no-repeat center center fixed',
-        //   '-webkit-background-size': 'cover',
-        //   '-moz-background-size': 'cover',
-        //   '-o-background-size': 'cover',
-        //   'background-size': 'cover'
-        // });
-
         $("#map").css({'z-index': '-1000'})
         $("#hero-image").css({'z-index': '1'});
       }
@@ -121,7 +139,7 @@
       if (stop_carousel){
         return true;
       } else {
-        setTimeout(spin, 6000);
+        setTimeout(spin, 11000);
       }
     }
 
@@ -150,6 +168,7 @@
           } 
         }
         carousel = data.rows;
+        preload_maps();
         spin();
       }) 
   })
